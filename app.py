@@ -17,7 +17,6 @@ Entrega prevista até 30/08/2025.
 - João Henrique Ayres Pereira (jhap@cesar.school)
 """)
 
-
 # --- Início do gráfico de percentual de reviews ---
 
 # Título/legenda do gráfico
