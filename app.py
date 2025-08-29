@@ -21,6 +21,7 @@ Entrega prevista até 30/08/2025.
 
 # Título/legenda do gráfico
 st.subheader("📊 Percentual de Hospedagens com Review por Cidade")
+st.write("Selecione o tipo de Hospedagem:")
 
 resumo_tipo = df.groupby(['city', 'room_type']).agg(
     total_listings=('name', 'count'),
@@ -60,18 +61,12 @@ fig.update_traces(
 )
 
 fig.update_layout(
-    plot_bgcolor="#f0f4f8",  
-    paper_bgcolor="#f0f4f8",  
-    font_color="black",   
+    font_color="white",  
     yaxis=dict(
-        title=dict(text="Percentual (%)", font=dict(color="black")),
-        tickfont=dict(color="black"),
-        range=[0, 100],
+        title=dict(text="Percentual (%)"),
+        range=[0, 100]
     ),
-    xaxis=dict(
-        title=dict(text="Cidade", font=dict(color="black")),
-        tickfont=dict(color="black")
-    ),
+    xaxis=dict(title=dict(text="Cidade")),
     bargap=0.3,
     updatemenus=[
         dict(
@@ -89,13 +84,18 @@ fig.update_layout(
                 )
                 for tipo in opcoes
             ],
-            direction="down",
+            direction="down",        
             showactive=True,
-            x=0.0,
-            y=1.15
+            x=0,                      
+            xanchor="left",
+            y=1.25,               
+            yanchor="top",
+            pad={"r": 0, "t": 10, "l": 0},
+            bgcolor="black",
+            font=dict(color="skyblue", size=14),
+            bordercolor="skyblue",
         )
     ],
-    margin=dict(l=60, r=60, t=80, b=60) 
 )
 
 st.plotly_chart(fig, use_container_width=True)
