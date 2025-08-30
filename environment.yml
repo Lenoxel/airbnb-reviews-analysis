@@ -3,9 +3,7 @@ channels:
   - conda-forge
 dependencies:
   - python=3.13
-  - pip
-  - pip:
-      - streamlit==1.48.1
-      - pandas==2.2.2
-      - numpy==1.26.4
-      - plotly==6.3.0
+  - streamlit=1.48.1
+  - pandas
+  - numpy
+  - plotly
