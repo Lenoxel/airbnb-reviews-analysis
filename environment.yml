@@ -1,9 +1,0 @@
-name: data-analysis-env
-channels:
-  - conda-forge
-dependencies:
-  - python=3.13
-  - streamlit=1.48.1
-  - pandas
-  - numpy
-  - plotly
