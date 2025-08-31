@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+from PIL import Image
 
 st.set_page_config(
     page_title="Airbnb - Ofertas de Hospedagem e Reviews",
@@ -20,6 +21,22 @@ df_reviews_rio = load_reviews_rio()
 
 st.title("Airbnb - Ofertas de Hospedagem e Reviews")
 
+col1, col2 = st.columns([2, 3])
+
+image = Image.open("data/images/airbnb-image-nano-banana.jpeg")
+
+with col1:
+    st.image(image, width=500, use_container_width=True)
+
+with col2:
+    st.markdown(
+        """
+    ### Bem-vindo ao dashboard de análise de hospedagens e reviews do Airbnb!
+
+    Este projeto apresenta uma análise detalhada das ofertas de hospedagem e dos comentários dos hóspedes em quatro cidades: **Cape Town**, **Hawaii**, **Rio de Janeiro** e **Bangkok**, utilizando dados reais coletados entre 2010 e 2025.
+    """
+    )
+
 with st.expander("Sobre o projeto"):
     st.write(
         """
@@ -34,14 +51,6 @@ with st.expander("Sobre o projeto"):
         - João Henrique Ayres Pereira (jhap@cesar.school)
         """
     )
-
-st.markdown(
-    """
-    Bem-vindo ao dashboard de análise de hospedagens e reviews do Airbnb!
-
-    Este projeto apresenta uma análise detalhada das ofertas de hospedagem e dos comentários dos hóspedes em quatro cidades: **Cape Town**, **Hawaii**, **Rio de Janeiro** e **Bangkok**, utilizando dados reais coletados entre 2010 e 2025.
-    """
-)
 
 col1, col2, col3, col4 = st.columns(4)
 

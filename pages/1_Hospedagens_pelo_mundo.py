@@ -1,6 +1,7 @@
 import streamlit as st
 import plotly.express as px
 import pandas as pd
+import plotly.graph_objects as go
 
 st.set_page_config(
     page_title="Hospedagens pelo mundo",
@@ -11,7 +12,7 @@ st.set_page_config(
 
 st.title("Hospedagens pelo mundo")
 
-df = pd.read_csv("data/airbnb-listings-cleaned.csv")
+df_listings = pd.read_csv("data/airbnb-listings-cleaned.csv")
 
 # --- Início do gráfico de percentual de reviews ---
 
@@ -20,7 +21,7 @@ st.subheader("📊 Percentual de Hospedagens com Review por Cidade")
 st.write("Selecione o tipo de Hospedagem:")
 
 resumo_tipo = (
-    df.groupby(["city", "room_type"])
+    df_listings.groupby(["city", "room_type"])
     .agg(
         total_listings=("name", "count"),
         com_review=("number_of_reviews", lambda x: (x > 0).sum()),
@@ -33,7 +34,7 @@ resumo_tipo["percentual_review"] = (
 ) * 100
 
 resumo_geral = (
-    df.groupby("city")
+    df_listings.groupby("city")
     .agg(
         total_listings=("name", "count"),
         com_review=("number_of_reviews", lambda x: (x > 0).sum()),
@@ -58,7 +59,7 @@ fig1 = px.bar(
 )
 
 fig1.update_traces(
-    textfont_size=12,
+    textfont_size=14,
     texttemplate="%{text:.1f}%",
     textposition="outside",
     hovertemplate="<b>%{x}</b><br>Percentual: %{y:.1f}%<extra></extra>",
@@ -69,6 +70,13 @@ fig1.update_layout(
     yaxis=dict(title=dict(text="Percentual (%)"), range=[0, 100]),
     xaxis=dict(title=dict(text="Cidade")),
     bargap=0.3,
+    title_font=dict(size=22),
+    title_font_size=24,
+    xaxis_title_font_size=20,
+    yaxis_title_font_size=20,
+    xaxis_tickfont_size=16,
+    yaxis_tickfont_size=16,
+    hoverlabel=dict(font_size=16, font_family="Arial"),
     updatemenus=[
         dict(
             buttons=[
@@ -112,19 +120,17 @@ st.plotly_chart(fig1, use_container_width=True)
 
 # --- gráfico do percentual da média de avaliações  por faixa de preço:
 
-import plotly.graph_objects as go
-import pandas as pd
-import streamlit as st
-
 # Criar coluna percentual de reviews
-df["reviews_percent"] = (df["number_of_reviews"] / df["number_of_reviews"].max()) * 100
+df_listings["reviews_percent"] = (
+    df_listings["number_of_reviews"] / df_listings["number_of_reviews"].max()
+) * 100
 
 # Filtrar preços até 500
-df = df[df["price"] <= 500]
+df_listings = df_listings[df_listings["price"] <= 500]
 
 # Criar bins de preço
-price_bins = pd.cut(df["price"], bins=30)  # pode ajustar o número de bins
-avg_reviews = df.groupby(price_bins)["reviews_percent"].mean().reset_index()
+price_bins = pd.cut(df_listings["price"], bins=30)  # pode ajustar o número de bins
+avg_reviews = df_listings.groupby(price_bins)["reviews_percent"].mean().reset_index()
 
 # Labels no formato "$min–max"
 avg_reviews["price_range"] = [
@@ -214,3 +220,64 @@ st.plotly_chart(fig2, use_container_width=True)
 
 
 # --- fim gráfico do percentual da média de avaliações  por faixa de preço:
+
+#  Gráfico comparativo de quantidade por tipo de quarto
+
+st.markdown("### 📊 Tipos de quarto que mais são procurados")
+
+cities = df_listings["city"].unique()
+selected_city = st.selectbox("Selecione a cidade", ["Todas", *sorted(cities)])
+
+df_listings_filtered_by_city = (
+    df_listings[df_listings["city"] == selected_city]
+    if selected_city != "Todas"
+    else df_listings
+)
+
+room_type_counts = (
+    df_listings_filtered_by_city["room_type"].value_counts().reset_index()
+)
+room_type_counts.columns = ["room_type", "count"]
+
+total_listings = room_type_counts["count"].sum()
+
+hotel_room_row = room_type_counts[room_type_counts["room_type"] == "Hotel room"]
+
+if not hotel_room_row.empty:
+    hotel_room_percentage = (hotel_room_row["count"].iloc[0] / total_listings) * 100
+else:
+    hotel_room_percentage = 0
+
+fig3 = px.bar(
+    room_type_counts,
+    x="room_type",
+    y="count",
+    color="room_type",
+    text="count",
+    title="Hospedagens disponíveis por tipo de Quarto",
+)
+
+fig3.update_layout(
+    xaxis_title="Tipo de Quarto",
+    xaxis=dict(showgrid=False),
+    yaxis_title="Quantidade",
+    yaxis=dict(showgrid=False),
+    xaxis_tickangle=-45,
+    showlegend=False,
+    title_font=dict(size=22),
+    title_font_size=24,
+    xaxis_title_font_size=20,
+    yaxis_title_font_size=20,
+    xaxis_tickfont_size=16,
+    yaxis_tickfont_size=16,
+    hoverlabel=dict(font_size=16, font_family="Arial"),
+)
+
+fig3.update_traces(
+    textfont_size=22,
+    hovertemplate="<b>%{x}</b><br>Quantidade: %{y}<extra></extra>",
+)
+
+st.plotly_chart(fig3, use_container_width=True)
+
+# Fim do gráfico comparativo de quantidade port tipo de quarto
