@@ -7,13 +7,26 @@ Este projeto utiliza Streamlit para análise de dados de reviews do Airbnb.
 ### Usando Conda
 
 1. Instale o [Miniconda](https://docs.conda.io/en/latest/miniconda.html) ou [Anaconda](https://www.anaconda.com/products/distribution).
-2. Crie o ambiente com o arquivo `environment.yml`:
+2. Crie um arquivo `environment.yml` com o seguinte conteúdo:
+   ```sh
+   name: data-analysis-env
+   channels:
+      - conda-forge
+   dependencies:
+      - python=3.13
+      - streamlit=1.48.1
+      - pandas
+      - numpy
+      - plotly
+      - pillow
+   ```
+3. Crie o ambiente com o arquivo `environment.yml`:
 
    ```sh
    conda env create -f environment.yml
    ```
 
-3. Ative o ambiente:
+4. Ative o ambiente:
 
    ```sh
    conda activate data-analysis-env
