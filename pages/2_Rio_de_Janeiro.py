@@ -9,10 +9,12 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+df_columns = ["listing_id", "name", "neighbourhood", "review_feeling"]
+
 
 @st.cache_data
 def load_reviews_rio():
-    return pd.read_parquet("data/airbnb-reviews-rio-merged.parquet")
+    return pd.read_parquet("data/airbnb-reviews-rio-merged.parquet", columns=df_columns)
 
 
 df_reviews_rio = load_reviews_rio()
@@ -46,10 +48,19 @@ min_evaluation_quantity = col2.slider(
 
 df_aggregated = df_reviews_rio_aggregated[
     df_reviews_rio_aggregated["total"] >= min_evaluation_quantity
-]
+].copy()
 
 if len(neighbourhood):
-    df_aggregated = df_aggregated[df_aggregated["neighbourhood"].isin(neighbourhood)]
+    df_aggregated = df_aggregated[
+        df_aggregated["neighbourhood"].isin(neighbourhood)
+    ].copy()
+
+if df_aggregated.empty:
+    st.warning(
+        "Nenhum resultado encontrado para os filtros selecionados. "
+        "Por favor, ajuste os filtros e tente novamente."
+    )
+    st.stop()
 
 df_aggregated["percentual_positive"] = (
     df_aggregated["positives"] / df_aggregated["total"]
@@ -75,10 +86,11 @@ fig = px.bar(
 fig.update_traces(
     textposition="outside",
     hovertemplate="<b>%{x}</b><br>"
+    + "Bairro: %{customdata[2]}<br>"
     + "Percentual positivo: %{y:.2f}%<br>"
     + "Total de reviews: %{customdata[0]}<br>"
     + "Positivos: %{customdata[1]}<extra></extra>",
-    customdata=ranking[["total", "positives"]].values,
+    customdata=ranking[["total", "positives", "neighbourhood"]].values,
     textfont_size=22,
     hoverlabel=dict(
         font_size=16, font_family="Arial", font_color="black", bgcolor="lightyellow"
