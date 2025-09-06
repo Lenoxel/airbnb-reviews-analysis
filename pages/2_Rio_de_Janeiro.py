@@ -1,6 +1,7 @@
 import streamlit as st
 import plotly.express as px
 import pandas as pd
+import calendar
 
 st.set_page_config(
     page_title="Reviews de hospedagens no Rio de Janeiro",
@@ -9,7 +10,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-df_columns = ["listing_id", "name", "neighbourhood", "review_feeling"]
+df_columns = ["listing_id", "name", "neighbourhood", "review_feeling", "date"]
 
 
 @st.cache_data
@@ -19,7 +20,25 @@ def load_reviews_rio():
 
 df_reviews_rio = load_reviews_rio()
 
+df_reviews_rio["date"] = pd.to_datetime(df_reviews_rio["date"])
+
 st.title("Reviews de hospedagens no Rio de Janeiro")
+
+min_year = df_reviews_rio["date"].dt.year.min()
+max_year = df_reviews_rio["date"].dt.year.max()
+
+[min_year_selected, max_year_selected] = st.slider(
+    "Selecione o intervalo de anos para análise",
+    min_value=min_year,
+    max_value=max_year,
+    value=(min_year, max_year),
+    step=1,
+)
+
+df_reviews_rio = df_reviews_rio[
+    (df_reviews_rio["date"].dt.year >= min_year_selected)
+    & (df_reviews_rio["date"].dt.year <= max_year_selected)
+].copy()
 
 df_reviews_rio_aggregated = (
     df_reviews_rio.groupby(["listing_id", "name", "neighbourhood"])
