@@ -40,7 +40,7 @@ with col2:
 with st.expander("Sobre o projeto"):
     st.write(
         """
-        Dashboard desenvolvido para a Atividade 3 da disciplina de Análise de Dados.
+        Dashboard desenvolvido para a Atividade 3 da disciplina de Análise e Visualização de Dados.
         Entrega prevista até 30/08/2025.
 
         **Participantes do grupo:**
@@ -94,7 +94,6 @@ st.markdown(
 
     - **Análise de sentimento dos comentários no Rio de Janeiro (reviews):**
         - Sentimento dos hóspedes sobre as hospedagens do Rio de Janeiro.
-        - Tendências e mudanças no sentimento ao longo dos anos.
         - Comparativo entre os bairros analisados.
 
     ### Sobre os dados

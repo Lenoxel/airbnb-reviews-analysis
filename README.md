@@ -1,6 +1,6 @@
 # Airbnb Reviews Analysis
 
-Este projeto utiliza Streamlit para análise de dados de reviews do Airbnb.
+Este projeto utiliza Streamlit para análise de dados de hospedagens e reviews do Airbnb.
 
 ## Configuração do ambiente
 
@@ -72,4 +72,10 @@ O app estará disponível em `http://localhost:8501`.
 
 - `app.py`: Código principal do aplicativo Streamlit.
 - `requirements.txt`: Dependências para uso com pip/venv.
-- `environment.yml`: Dependências para uso com
+- `environment.yml`: Dependências para uso com conda.
+- `data/*`: Dados estáticos do projeto (e.g. imagens, datasets).
+- `pages/*`: Páginas que podem ser acessadas na aplicação.
+
+## Aplicação publicada
+
+Para acessar a aplicação na web, acesse: https://airbnb-reviews-analysis-viz.streamlit.app/
