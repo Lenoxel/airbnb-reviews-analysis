@@ -37,20 +37,20 @@ with col2:
     """
     )
 
-with st.expander("Sobre o projeto"):
-    st.write(
-        """
-        Dashboard desenvolvido para a Atividade 3 da disciplina de Análise e Visualização de Dados.
-        Entrega prevista até 30/08/2025.
+# with st.expander("Sobre o projeto"):
+#     st.write(
+#         """
+#         Dashboard desenvolvido para a Atividade 3 da disciplina de Análise e Visualização de Dados.
+#         Entrega prevista até 30/08/2025.
 
-        **Participantes do grupo:**
-        - Bruno Venceslau Barbosa (bvb@cesar.school)
-        - Carolina Queiroz de Sousa (cqs@cesar.school)
-        - Gabriel Lenon Barros da Silva (glbs@cesar.school)
-        - Karina Meireles Varela (kmv@cesar.school)
-        - João Henrique Ayres Pereira (jhap@cesar.school)
-        """
-    )
+#         **Participantes do grupo:**
+#         - Bruno Venceslau Barbosa (bvb@cesar.school)
+#         - Carolina Queiroz de Sousa (cqs@cesar.school)
+#         - Gabriel Lenon Barros da Silva (glbs@cesar.school)
+#         - Karina Meireles Varela (kmv@cesar.school)
+#         - João Henrique Ayres Pereira (jhap@cesar.school)
+#         """
+#     )
 
 col1, col2, col3, col4 = st.columns(4)
 
