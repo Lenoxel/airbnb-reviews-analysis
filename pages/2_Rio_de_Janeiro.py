@@ -1,7 +1,6 @@
 import streamlit as st
 import plotly.express as px
 import pandas as pd
-import calendar
 
 st.set_page_config(
     page_title="Reviews de hospedagens no Rio de Janeiro",
@@ -138,6 +137,101 @@ st.plotly_chart(fig, use_container_width=True)
 
 st.subheader("📊 Análise Temporal de Reviews")
 
-st.selectbox("", ranking["name"].tolist())
+listing_names = st.multiselect("Selecione as hospedagens", ranking["name"].tolist())
 
-# Plotar abaixo a análise temporal demonstrando o sentimento dos reviews ao longo do tempo para a hospedagem selecionada
+df_listing = df_reviews_rio[df_reviews_rio["name"].isin(listing_names)].copy()
+
+df_listing["month_year"] = df_listing["date"].dt.to_period("M").dt.to_timestamp()
+
+df_time_analysis = (
+    df_listing.groupby(["month_year", "review_feeling", "name"])
+    .agg(total=("review_feeling", "count"))
+    .reset_index()
+)
+
+if len(listing_names) == 0:
+    st.info("Selecione pelo menos uma hospedagem para visualizar a análise temporal.")
+    st.stop()
+
+if len(listing_names) == 1:
+    fig2 = px.line(
+        df_time_analysis,
+        x="month_year",
+        y="total",
+        color="review_feeling",
+        title=f"Análise Temporal de Reviews",
+        custom_data=["review_feeling"],
+        line_shape="spline",
+        markers=True,
+        color_discrete_map={
+            "Positive": "#1f77b4",
+            "Negative": "#d62728",
+            "Neutral": "#7f7f7f",
+        },
+    )
+
+    fig2.update_traces(
+        hovertemplate="<b>%{x|%b %Y}</b><br>"
+        + "Sentimento: %{customdata[0]}<br>"
+        + "Total de Reviews: %{y}<extra></extra>",
+        hoverlabel=dict(
+            font_size=16, font_family="Arial", font_color="black", bgcolor="white"
+        ),
+    )
+
+    fig2.update_layout(
+        xaxis_title="Mês e Ano",
+        yaxis_title="Total de Reviews",
+        title_font=dict(size=22),
+        title_font_size=24,
+        xaxis_title_font_size=20,
+        yaxis_title_font_size=20,
+        xaxis_tickfont_size=16,
+        yaxis_tickfont_size=16,
+        legend_title_font_size=18,
+        legend_font_size=16,
+        margin=dict(t=50, b=50, l=50, r=50),
+    )
+
+    st.plotly_chart(fig2, use_container_width=True)
+else:
+    df_time_analysis = df_time_analysis[
+        df_time_analysis["review_feeling"] == "Positive"
+    ].copy()
+
+    fig2 = px.area(
+        df_time_analysis,
+        x="month_year",
+        y="total",
+        color="name",
+        title=f"Análise Temporal Comparativa de Reviews Positivos",
+        custom_data=["name", "review_feeling"],
+        line_shape="spline",
+        markers=False,
+        color_discrete_sequence=px.colors.qualitative.Dark24,
+    )
+
+    fig2.update_traces(
+        hovertemplate="<b>%{x|%b %Y}</b><br>"
+        + "Hospedagem: %{customdata[0]}<br>"
+        + "Total de Reviews Positivos: %{y}<extra></extra>",
+        hoverlabel=dict(
+            font_size=16, font_family="Arial", font_color="black", bgcolor="white"
+        ),
+    )
+
+    fig2.update_layout(
+        xaxis_title="Mês e Ano",
+        yaxis_title="Total de Reviews Positivos",
+        title_font=dict(size=22),
+        title_font_size=24,
+        xaxis_title_font_size=20,
+        yaxis_title_font_size=20,
+        xaxis_tickfont_size=16,
+        yaxis_tickfont_size=16,
+        legend_title_font_size=18,
+        legend_font_size=16,
+        margin=dict(t=50, b=50, l=50, r=50),
+    )
+
+    st.plotly_chart(fig2, use_container_width=True)
