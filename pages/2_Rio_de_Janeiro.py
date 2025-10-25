@@ -31,7 +31,7 @@ max_year = df_reviews_rio["date"].dt.year.max()
     "Selecione o intervalo de anos para análise",
     min_value=min_year,
     max_value=max_year,
-    value=(min_year, max_year),
+    value=(max_year - 5, max_year),
     step=1,
 )
 
@@ -61,7 +61,7 @@ min_evaluation_quantity = col2.slider(
     "Escolha a quantidade mínima de avaliações",
     min_value=int(df_reviews_rio_aggregated["total"].min()),
     max_value=int(df_reviews_rio_aggregated["total"].max()),
-    value=df_reviews_rio_aggregated["total"].quantile(0.75).astype(int),
+    value=df_reviews_rio_aggregated["total"].quantile(0.99).astype(int),
     step=1,
 )
 
@@ -98,7 +98,7 @@ fig = px.bar(
     title=f"Top {quantity_to_show} hospedagens mais bem avaliadas",
     text=ranking["percentual_positive"].round(1).astype(str) + "%",
     color="percentual_positive",
-    color_continuous_scale="YlGn",
+    color_continuous_scale="Blues",
     height=700,
 )
 
@@ -112,7 +112,7 @@ fig.update_traces(
     customdata=ranking[["total", "positives", "neighbourhood"]].values,
     textfont_size=22,
     hoverlabel=dict(
-        font_size=16, font_family="Arial", font_color="black", bgcolor="lightyellow"
+        font_size=16, font_family="Arial", font_color="black", bgcolor="white"
     ),
 )
 
@@ -135,3 +135,9 @@ fig.update_layout(
 )
 
 st.plotly_chart(fig, use_container_width=True)
+
+st.subheader("📊 Análise Temporal de Reviews")
+
+st.selectbox("", ranking["name"].tolist())
+
+# Plotar abaixo a análise temporal demonstrando o sentimento dos reviews ao longo do tempo para a hospedagem selecionada
