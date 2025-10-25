@@ -10,274 +10,234 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-st.title("Hospedagens pelo mundo")
 
-df_listings = pd.read_csv("data/airbnb-listings-cleaned.csv")
+@st.cache_data
+def load_data():
+    return pd.read_csv("data/airbnb-listings-cleaned.csv")
 
-# --- Início do gráfico de percentual de reviews ---
 
-# Título/legenda do gráfico
-st.subheader("📊 Percentual de Hospedagens com Review por Cidade")
-st.write("Selecione o tipo de Hospedagem:")
+def plot_reviews_per_month(df):
+    st.subheader("📊 Reviews das Hospedagens por Cidade")
 
-resumo_tipo = (
-    df_listings.groupby(["city", "room_type"])
-    .agg(
-        total_listings=("name", "count"),
-        com_review=("number_of_reviews", lambda x: (x > 0).sum()),
-    )
-    .reset_index()
-)
+    room_types = ["Todos"] + sorted(df["room_type"].unique().tolist())
 
-resumo_tipo["percentual_review"] = (
-    resumo_tipo["com_review"] / resumo_tipo["total_listings"]
-) * 100
+    selected_room_type = st.selectbox("Selecione o tipo de hospedagem", room_types)
 
-resumo_geral = (
-    df_listings.groupby("city")
-    .agg(
-        total_listings=("name", "count"),
-        com_review=("number_of_reviews", lambda x: (x > 0).sum()),
-    )
-    .reset_index()
-)
-
-resumo_geral["percentual_review"] = (
-    resumo_geral["com_review"] / resumo_geral["total_listings"]
-) * 100
-
-opcoes = ["Todos"] + resumo_tipo["room_type"].unique().tolist()
-
-data_plot = resumo_geral
-
-fig1 = px.bar(
-    data_plot,
-    x="city",
-    y="percentual_review",
-    text="percentual_review",
-    color_discrete_sequence=["skyblue"],
-)
-
-fig1.update_traces(
-    textfont_size=14,
-    texttemplate="%{text:.1f}%",
-    textposition="outside",
-    hovertemplate="<b>%{x}</b><br>Percentual: %{y:.1f}%<extra></extra>",
-)
-
-fig1.update_layout(
-    font_color="white",
-    yaxis=dict(title=dict(text="Percentual (%)"), range=[0, 100]),
-    xaxis=dict(title=dict(text="Cidade")),
-    bargap=0.3,
-    title_font=dict(size=22),
-    title_font_size=24,
-    xaxis_title_font_size=20,
-    yaxis_title_font_size=20,
-    xaxis_tickfont_size=16,
-    yaxis_tickfont_size=16,
-    hoverlabel=dict(font_size=16, font_family="Arial"),
-    updatemenus=[
-        dict(
-            buttons=[
-                dict(
-                    label=tipo,
-                    method="update",
-                    args=[
-                        {
-                            "y": [
-                                (
-                                    resumo_tipo[resumo_tipo["room_type"] == tipo][
-                                        "percentual_review"
-                                    ]
-                                    if tipo != "Todos"
-                                    else resumo_geral["percentual_review"]
-                                )
-                            ]
-                        }
-                    ],
-                )
-                for tipo in opcoes
-            ],
-            direction="down",
-            showactive=True,
-            x=0,
-            xanchor="left",
-            y=1.25,
-            yanchor="top",
-            pad={"r": 0, "t": 10, "l": 0},
-            bgcolor="black",
-            font=dict(color="skyblue", size=14),
-            bordercolor="skyblue",
+    if selected_room_type != "Todos":
+        summary = (
+            df.groupby(["city", "room_type"])
+            .agg(
+                total=("name", "count"),
+                reviews_per_month_count=("reviews_per_month", "mean"),
+            )
+            .reset_index()
         )
-    ],
-)
 
-st.plotly_chart(fig1, use_container_width=True)
+        plot_data = summary[summary["room_type"] == selected_room_type]
+    else:
+        plot_data = (
+            df.groupby("city")
+            .agg(
+                total=("name", "count"),
+                reviews_per_month_count=("reviews_per_month", "mean"),
+            )
+            .reset_index()
+        )
 
-# --- Fim do gráfico de percentual de reviews ---
-
-
-# --- gráfico do percentual da média de avaliações  por faixa de preço:
-
-# Criar coluna percentual de reviews
-df_listings["reviews_percent"] = (
-    df_listings["number_of_reviews"] / df_listings["number_of_reviews"].max()
-) * 100
-
-# Filtrar preços até 500
-df_listings = df_listings[df_listings["price"] <= 500]
-
-# Criar bins de preço
-price_bins = pd.cut(df_listings["price"], bins=30)  # pode ajustar o número de bins
-avg_reviews = df_listings.groupby(price_bins)["reviews_percent"].mean().reset_index()
-
-# Labels no formato "$min–max"
-avg_reviews["price_range"] = [
-    f"${int(b.left)}–{int(b.right)}" for b in avg_reviews["price"]
-]
-
-# Criar gráfico de pontos
-
-# --- WIDGET: botões de seleção de faixa ---
-st.markdown("### 🔎 Selecione a faixa de preços")
-
-# CSS customizado para estilizar os botões
-st.markdown(
-    """
-    <style>
-    div.stButton > button {
-        background-color: black;
-        color: #1E90FF; /* Azul vivo */
-        border-radius: 10px;
-        border: 1px solid #1E90FF;
-        padding: 0.6em 1em;
-        font-weight: bold;
-    }
-    div.stButton > button:hover {
-        background-color: #1E90FF;
-        color: black;
-        border: 1px solid black;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
-# Lista de opções
-price_ranges = avg_reviews["price_range"].unique()
-
-# Dicionário para guardar seleções
-selected_ranges = []
-
-cols = st.columns(4)  # divide em 4 colunas (ajuste se quiser)
-
-for i, price in enumerate(price_ranges):
-    if cols[i % 4].button(price):
-        if price not in selected_ranges:
-            selected_ranges.append(price)
-
-# Se nada for escolhido, mostra todas
-if not selected_ranges:
-    selected_ranges = price_ranges
-
-# --- Filtra os dados ---
-filtered_data = avg_reviews[avg_reviews["price_range"].isin(selected_ranges)]
-
-# --- Gráfico ---
-fig2 = go.Figure()
-
-fig2.add_trace(
-    go.Scatter(
-        x=filtered_data["price_range"],
-        y=filtered_data["reviews_percent"],
-        mode="markers",
-        marker=dict(size=8, color="blue", line=dict(width=1, color="black")),
-        name="Média de reviews (%)",
-        hovertemplate="<b>Faixa de preço:</b> %{x}<br><b>Média Reviews:</b> %{y:.2f}%<extra></extra>",
+    fig = px.bar(
+        plot_data,
+        x="city",
+        y="reviews_per_month_count",
+        color="reviews_per_month_count",
+        color_continuous_scale="Blues",
+        text="reviews_per_month_count",
+        title=f"Média de Reviews por Mês ({selected_room_type})",
     )
+
+    fig.update_traces(
+        hovertemplate="<b>%{x}</b><br>Média Reviews por Mês: %{y:.2f}<extra></extra>",
+        texttemplate="%{text:.2f}",
+        textfont_size=18,
+        textposition="auto",
+        hoverlabel=dict(
+            font_size=16, font_family="Arial", font_color="black", bgcolor="white"
+        ),
+    )
+
+    fig.update_layout(
+        xaxis_title="Cidade",
+        yaxis_title="Média de Reviews por Mês",
+        showlegend=False,
+        title_font=dict(size=22),
+        title_font_size=22,
+        xaxis_title_font_size=18,
+        yaxis_title_font_size=18,
+        xaxis_tickfont_size=16,
+        yaxis_tickfont_size=16,
+        margin=dict(t=50, b=50, l=50, r=50),
+        coloraxis_colorbar=dict(title="Média Reviews por Mês"),
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+
+
+# def plot_reviews_vs_price(df):
+#     st.subheader("💲 Relação entre Preço e Avaliações")
+
+#     df = df[df["price"] <= 500]
+#     df["reviews_percentage"] = (
+#         df["number_of_reviews"] / df["number_of_reviews"].max()
+#     ) * 100
+
+#     price_bins = pd.cut(df["price"], bins=30)
+#     avg_reviews = df.groupby(price_bins)["reviews_percentage"].mean().reset_index()
+
+#     avg_reviews["price_left"] = avg_reviews["price"].apply(lambda x: x.left)
+#     avg_reviews["price_right"] = avg_reviews["price"].apply(lambda x: x.right)
+
+#     avg_reviews["price_range"] = [
+#         f"${int(b.left)}–{int(b.right)}" for b in avg_reviews["price"]
+#     ]
+
+#     min_price, max_price = st.slider(
+#         "Selecione faixa de preço",
+#         min_value=0,
+#         max_value=500,
+#         value=(0, 500),
+#         step=10,
+#     )
+
+#     avg_reviews["price_left"] = pd.to_numeric(
+#         avg_reviews["price_left"], errors="coerce"
+#     )
+#     avg_reviews["price_right"] = pd.to_numeric(
+#         avg_reviews["price_right"], errors="coerce"
+#     )
+
+#     filtered_data = avg_reviews[
+#         (avg_reviews["price_left"] >= min_price)
+#         & (avg_reviews["price_right"] <= max_price)
+#     ]
+
+#     fig = go.Figure()
+#     fig.add_trace(
+#         go.Scatter(
+#             x=filtered_data["price_range"],
+#             y=filtered_data["reviews_percentage"],
+#             mode="lines+markers",
+#             marker=dict(size=8, color="blue"),
+#             line=dict(color="royalblue"),
+#             hovertemplate="<b>Faixa:</b> %{x}<br>Média Reviews: %{y:.2f}%<extra></extra>",
+#         )
+#     )
+#     fig.update_layout(
+#         title="Média de avaliações (%) por faixa de preço",
+#         xaxis=dict(title="Faixa de preço (USD)", tickangle=45),
+#         yaxis=dict(title="Média de Reviews (%)", range=[0, 100]),
+#     )
+#     st.plotly_chart(fig, use_container_width=True)
+
+
+def plot_room_type_distribution(df):
+    st.subheader("🏨 Distribuição dos Tipos de Quarto")
+
+    cities = ["Todas"] + sorted(df["city"].unique())
+    selected_city = st.selectbox("Selecione a cidade", cities)
+
+    filtered_df = df if selected_city == "Todas" else df[df["city"] == selected_city]
+
+    room_type_counts = filtered_df["room_type"].value_counts().reset_index()
+    room_type_counts.columns = ["room_type", "count"]
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        fig_bar = px.bar(
+            room_type_counts,
+            x="room_type",
+            y="count",
+            text="count",
+            color="room_type",
+            title="Hospedagens por tipo de quarto",
+            text_auto=True,
+        )
+
+        fig_bar.update_traces(
+            hovertemplate="<b>%{x}</b><br>Quantidade: %{y}<extra></extra>",
+            textfont_size=18,
+            textposition="auto",
+            hoverlabel=dict(
+                font_size=16, font_family="Arial", font_color="black", bgcolor="white"
+            ),
+        )
+
+        fig_bar.update_layout(
+            xaxis_title="Tipo de Quarto",
+            yaxis_title="Quantidade de Hospedagens",
+            showlegend=False,
+            title_font=dict(size=22),
+            title_font_size=22,
+            xaxis_title_font_size=18,
+            yaxis_title_font_size=18,
+            xaxis_tickfont_size=16,
+            yaxis_tickfont_size=16,
+            margin=dict(t=50, b=50, l=50, r=50),
+        )
+
+        st.plotly_chart(fig_bar, use_container_width=True)
+
+    with col2:
+        fig_pie = px.pie(
+            room_type_counts,
+            names="room_type",
+            values="count",
+            title="Proporção dos tipos de quarto",
+            hole=0.4,
+        )
+
+        fig_pie.update_traces(
+            hovertemplate="<b>%{label}</b><br>Quantidade: %{value}<extra></extra>",
+            textposition="auto",
+            textinfo="percent+label",
+            textfont_size=16,
+        )
+
+        fig_pie.update_layout(
+            title_font=dict(size=22),
+            title_font_size=22,
+            margin=dict(t=50, b=50, l=50, r=50),
+        )
+
+        st.plotly_chart(fig_pie, use_container_width=True)
+
+
+st.title("🌍 Hospedagens pelo mundo")
+
+listings_df = load_data()
+
+listings_df["date"] = pd.to_datetime(
+    listings_df["last_review"].replace("Nunca Avaliado", pd.NaT), errors="coerce"
 )
 
-fig2.update_layout(
-    title="Média de avaliações (%) por faixa de preço",
-    title_font=dict(size=22),
-    xaxis=dict(
-        title="Faixa de preço (USD)",
-        tickangle=45,
-        title_font=dict(size=18),
-        tickfont=dict(size=14),
-    ),
-    yaxis=dict(
-        title="Avaliações (%)",
-        tickformat=".1%",
-        title_font=dict(size=18),
-        tickfont=dict(size=14),
-    ),
-    font=dict(size=14),
+valid_dates_df = listings_df.dropna(subset=["date"])
+
+min_date = valid_dates_df["date"].min().date()
+max_date = valid_dates_df["date"].max().date()
+
+[min_year_selected, max_year_selected] = st.slider(
+    "Selecione o intervalo de anos para análise",
+    min_value=min_date.year,
+    max_value=max_date.year,
+    value=(max_date.year - 5, max_date.year),
+    step=1,
 )
 
-st.plotly_chart(fig2, use_container_width=True)
+listings_df_filtered = listings_df[
+    (listings_df["date"].dt.year >= min_year_selected)
+    & (listings_df["date"].dt.year <= max_year_selected)
+].copy()
 
 
-# --- fim gráfico do percentual da média de avaliações  por faixa de preço:
-
-#  Gráfico comparativo de quantidade por tipo de quarto
-
-st.markdown("### 📊 Tipos de quarto que mais são procurados")
-
-cities = df_listings["city"].unique()
-selected_city = st.selectbox("Selecione a cidade", ["Todas", *sorted(cities)])
-
-df_listings_filtered_by_city = (
-    df_listings[df_listings["city"] == selected_city]
-    if selected_city != "Todas"
-    else df_listings
-)
-
-room_type_counts = (
-    df_listings_filtered_by_city["room_type"].value_counts().reset_index()
-)
-room_type_counts.columns = ["room_type", "count"]
-
-total_listings = room_type_counts["count"].sum()
-
-hotel_room_row = room_type_counts[room_type_counts["room_type"] == "Hotel room"]
-
-if not hotel_room_row.empty:
-    hotel_room_percentage = (hotel_room_row["count"].iloc[0] / total_listings) * 100
-else:
-    hotel_room_percentage = 0
-
-fig3 = px.bar(
-    room_type_counts,
-    x="room_type",
-    y="count",
-    color="room_type",
-    text="count",
-    title="Hospedagens disponíveis por tipo de Quarto",
-)
-
-fig3.update_layout(
-    xaxis_title="Tipo de Quarto",
-    xaxis=dict(showgrid=False),
-    yaxis_title="Quantidade",
-    yaxis=dict(showgrid=False),
-    xaxis_tickangle=-45,
-    showlegend=False,
-    title_font=dict(size=22),
-    title_font_size=24,
-    xaxis_title_font_size=20,
-    yaxis_title_font_size=20,
-    xaxis_tickfont_size=16,
-    yaxis_tickfont_size=16,
-    hoverlabel=dict(font_size=16, font_family="Arial"),
-)
-
-fig3.update_traces(
-    textfont_size=22,
-    hovertemplate="<b>%{x}</b><br>Quantidade: %{y}<extra></extra>",
-)
-
-st.plotly_chart(fig3, use_container_width=True)
-
-# Fim do gráfico comparativo de quantidade port tipo de quarto
+plot_room_type_distribution(listings_df_filtered)
+# plot_reviews_vs_price(listings_df_filtered)
+plot_reviews_per_month(listings_df_filtered)
