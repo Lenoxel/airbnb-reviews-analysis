@@ -195,12 +195,16 @@ if len(listing_names) == 1:
 
     st.plotly_chart(fig2, use_container_width=True)
 else:
-    df_time_analysis = df_time_analysis[
-        df_time_analysis["review_feeling"] == "Positive"
-    ].copy()
+    df_listing_positive = df_listing[df_listing["review_feeling"] == "Positive"].copy()
 
-    fig2 = px.area(
-        df_time_analysis,
+    df_time_analysis_positive = (
+        df_listing_positive.groupby(["month_year", "review_feeling", "name"])
+        .agg(total=("review_feeling", "count"))
+        .reset_index()
+    )
+
+    fig2 = px.line(
+        df_time_analysis_positive,
         x="month_year",
         y="total",
         color="name",
