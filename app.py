@@ -88,13 +88,13 @@ st.markdown(
     ### O que você vai encontrar nos dashboards:
 
     - **Visão geral das ofertas de hospedagem (listings):**
-        - Evolução do número de hospedagens ao longo dos anos.
-        - Distribuição por tipo de acomodação, faixa de preço e localização.
+        - Distribuição das ofertas de hospedagem por tipo de acomodação e localização.
         - Comparativo entre as cidades analisadas.
+        - Análise da quantidade de avaliações recebidas ao longo do tempo.
 
     - **Análise de sentimento dos comentários no Rio de Janeiro (reviews):**
-        - Sentimento dos hóspedes sobre as hospedagens do Rio de Janeiro.
-        - Comparativo entre os bairros analisados.
+        - Sentimento dos hóspedes extraído das avaliações de hospedagens do Rio de Janeiro.
+        - Comparativo entre os bairros e hospedagens analisados.
 
     ### Sobre os dados
 
